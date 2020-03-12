@@ -1,0 +1,99 @@
+heat_template_version: 2015-10-15
+
+description: |
+   #### Creates:
+   #### Windows server using the special
+   #### "Rackspace::Cloud::WinServer" resource
+   #### Author: Brian King
+   #### version: 0.0.1
+   #### last modified: 2020-03-12
+
+parameter_groups:
+
+- label: winServer Settings
+  parameters:
+    - winServerName
+    - winServerFlavor
+parameters:
+
+#begin server params
+
+  winServerName:
+    type: string
+    label: 'Name of server'
+    default: 'winServer'
+    constraints:
+      - allowed_pattern: '^[\w-]+$'
+        description: "Server name may only have alphanumeric characters, underscores, and dashes"
+
+  winServerFlavor:
+    type: string
+    default: 2 GB General Purpose v1
+    label: Gateway Instance Flavor Name or ID (such as 4 GB General Purpose v1)
+    description: Must be a valid Rackspace Cloud Flavor
+    constraints:
+    - allowed_values:
+      - 3.75 GB Compute v1
+      - 7.5 GB Compute v1
+      - 15 GB Compute v1
+      - 30 GB Compute v1
+      - 60 GB Compute v1
+      - 15 GB Memory v1
+      - 30 GB Memory v1
+      - 60 GB Memory v1
+      - 120 GB Memory v1
+      - 240 GB Memory v1
+      - 1 GB General Purpose v1
+      - 2 GB General Purpose v1
+      - 4 GB General Purpose v1
+      - 8 GB General Purpose v1
+      - 15 GB I/O v1
+      - 30 GB I/O v1
+      - 60 GB I/O v1
+      - 90 GB I/O v1
+      - 120 GB I/O v1
+
+  winServerImage:
+    type: string
+    default: "Windows Server 2012 R2"
+    label: Windows Server image
+    description: Windows Server image
+
+resources:
+
+  winServerPass:
+    type: OS::Heat::RandomString
+
+  winServerVolume:
+    type: OS::Cinder::Volume
+    properties:
+      name: { get_param: winServerName }
+      size: 50
+      volume_type: SSD
+      image: { get_param: winServerImage }
+
+  winServerInstance:
+    type: Rackspace::Cloud::WinServer
+    properties:
+      name: { get_param: winServerName }
+      block_device_mapping:
+        - device_name: vda
+          volume_id: { get_resource: winServerVolume }
+          delete_on_termination: False
+      admin_pass: { get_attr: [ winServerPass, value ]}
+      flavor: { get_param: winServerFlavor }
+      metadata:
+        created_by: winserver_orch_template
+      networks:
+        - network: '00000000-0000-0000-0000-000000000000'
+        - network: '11111111-1111-1111-1111-111111111111'
+
+outputs:
+
+  winServerPublicIPs:
+      value: { get_attr: [winServerInstance, networks, public] }
+      description: 'Public IPs of Gateway Instance'
+
+  winServerPassDisplay:
+    value: { get_attr: [winServerPass, value ] }
+    description: 'Admin Password of Gateway Instance'

@@ -14,6 +14,7 @@ parameter_groups:
   parameters:
     - winServerName
     - winServerFlavor
+
 parameters:
 
 #begin server params
@@ -29,7 +30,7 @@ parameters:
   winServerFlavor:
     type: string
     default: 2 GB General Purpose v1
-    label: Gateway Instance Flavor Name or ID (such as 4 GB General Purpose v1)
+    label: Windows Instance Flavor Name or ID (such as 4 GB General Purpose v1)
     description: Must be a valid Rackspace Cloud Flavor
     constraints:
     - allowed_values:
@@ -38,11 +39,6 @@ parameters:
       - 15 GB Compute v1
       - 30 GB Compute v1
       - 60 GB Compute v1
-      - 15 GB Memory v1
-      - 30 GB Memory v1
-      - 60 GB Memory v1
-      - 120 GB Memory v1
-      - 240 GB Memory v1
       - 1 GB General Purpose v1
       - 2 GB General Purpose v1
       - 4 GB General Purpose v1
@@ -52,6 +48,12 @@ parameters:
       - 60 GB I/O v1
       - 90 GB I/O v1
       - 120 GB I/O v1
+      - 15 GB Memory v1
+      - 30 GB Memory v1
+      - 60 GB Memory v1
+      - 120 GB Memory v1
+      - 240 GB Memory v1
+
 
   winServerImage:
     type: string
@@ -60,6 +62,13 @@ parameters:
     description: Windows Server image
 
 resources:
+  # doesn't work. For type Rackspace::Cloud::WinServer, user_data
+  # must NOT be OS::Heat::SoftwareConfig type
+  # winServerData:
+  #   type: OS::Heat::SoftwareConfig
+  #   properties:
+  #     config: |
+  #             'X'*10000|out-file C:\lotsofx.txt
 
   winServerPass:
     type: OS::Heat::RandomString
@@ -87,13 +96,15 @@ resources:
       networks:
         - network: '00000000-0000-0000-0000-000000000000'
         - network: '11111111-1111-1111-1111-111111111111'
+      user_data: |
+                  echo "hello"  >> C:\myhosts.txt
 
 outputs:
 
   winServerPublicIPs:
       value: { get_attr: [winServerInstance, networks, public] }
-      description: 'Public IPs of Gateway Instance'
+      description: 'Public IPs of Windows Instance'
 
   winServerPassDisplay:
     value: { get_attr: [winServerPass, value ] }
-    description: 'Admin Password of Gateway Instance'
+    description: 'Admin Password of Windows Instance'
